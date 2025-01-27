@@ -1,9 +1,3 @@
-get-content .env | ForEach-Object {
-    $name, $value = $_.split('=')
-    set-content env:\$name $value
-}
-
-
 $body = @{
     licenseKey = "TEST-LICENSE-123"
 } | ConvertTo-Json -Depth 10
