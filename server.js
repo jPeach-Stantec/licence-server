@@ -2,12 +2,13 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const DuckDB = require("@duckdb/node-api");
 require("dotenv").config();
+const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT;
 
 // Middleware to parse JSON requests
-app.use(bodyParser.json());
+app.use(bodyParser.json(), cors());
 
 // Set up DuckDB database
 const connection = DuckDB.DuckDBInstance.create("apiKeys.db").then((db) => {
