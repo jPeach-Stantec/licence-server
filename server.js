@@ -27,6 +27,23 @@ const connection = DuckDB.DuckDBInstance.create("apiKeys.db").then((db) => {
             );
           `);
     console.log('Table "licenses" is ready');
+
+    const testLicenseKey = process.env.TEST_KEY;
+    const expiryDate = process.env.EXPIRY_DATE;
+    const userName = process.env.USER_NAME;
+
+    // Insert license only if it's defined
+    if (testLicenseKey) {
+      try {
+        (await connection).run(
+          "INSERT INTO licenses (licenseKey, expiryDate, userName) VALUES (?, ?, ?) ON CONFLICT(licenseKey) DO NOTHING",
+          [testLicenseKey, expiryDate, userName]
+        );
+        console.log("Test license added from environment variables.");
+      } catch (error) {
+        console.error("Error inserting test license:", err);
+      }
+    }
   } catch (err) {
     console.error("Error creating table:", err);
   }
@@ -63,15 +80,6 @@ const basicAuth = (req, res, next) => {
 // API endpoint to validate a license (protected with Basic Auth)
 app.post("/validate", async (req, res) => {
   const { licenseKey } = req.body;
-
-  //   (await connection)
-  //     .runAndReadAll(
-  //       "SELECT licenseKey, strftime(expiryDate, '%Y-%m-%d') AS expiryDate, isValid FROM licenses WHERE licenseKey = ?",
-  //       [licenseKey]
-  //     )
-  //     .then((v) => {
-  //       console.log(v.getRowObjectsJson());
-  //     });
 
   if (!licenseKey) {
     return res
@@ -139,10 +147,6 @@ app.post("/add-license", basicAuth, async (req, res) => {
   await logKeys(licenseKey);
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Licensing server running on http://localhost:${PORT}`);
-});
 async function logKeys(licenseKey) {
   (await connection)
     .runAndReadAll(
@@ -153,3 +157,8 @@ async function logKeys(licenseKey) {
       console.log(v.getRowObjectsJson());
     });
 }
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Licensing server running on http://localhost:${PORT}`);
+});
